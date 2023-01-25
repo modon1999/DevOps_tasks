@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: website
+  labels:
+    app  : website           # Для точного определения объекта, я посчитал,
+    env  : prod              # что необходимо указать приложение(app), среду(prod)
+    owner: NikitaGrigorev    # и команду.ответственного за ресурс(NikitaGrigorev)
+  annotations:
+    last_modified_date : 09.01.2023          # Для troubleshooting будет полезно знать дату последних изменений
+    responsible_release: "Nikita Grigorev"   # Для troubleshooting также будет полезно знать, кто последний вносил изменения
+spec:
+  strategy:
+    type: RollingUpdate  # Я выбрал стандартную стратегию развертывания, при том, чтобы повысить отказоустойчивость
+    rollingUpdate:       # при развертывании я развертываю по 1 реплике сверх установленного лимита
+       maxSurge: 1
+       maxUnavailable: 0
+  minReadySeconds: 10  # Для подтверждения работоспособности реплики при развертывании, с учетом того, что приложение требует около 5-10 секунд для инициализации
+  selector:
+    matchLabels:
+      app    : website
+      env    : prod
+      enable : 'true'         # Здесь помимо описаных ниже меток используется enable : 'true', чтобы реплику в любой момент можно было удалить из deployment с целью тестирования или troubleshooting
+      owner: NikitaGrigorev
+  replicas: 3  # Начальное количество реплик для отказоустойчивости, чтобы существовало по 1 реплике в каждой availability zone
+  template:
+    metadata:
+      name: website
+      labels:
+        app    : website
+        env    : prod
+        enable : 'true'
+        owner: NikitaGrigorev
+    spec:
+      containers:
+      - image: luksa/kubia:v1  # Здесь я использовал image автора книги Лукша-Марко Kubernetes-в-действии, стоит отметить, что стоит использовать конкретный ag место latest, чтобы случайно не начать развертывать новую версию контейнера
+        name: nodejs
+        livenessProbe: # Проверка живучести
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10  # Так как приложение требует около 5-10 секунд для инициализации
+          periodSeconds: 10 # На случай случайных ошибок, чтобы контейнер не удалялся сразу
+        readinessProbe: # Проверка готовности
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10  # Так как приложение требует около 5-10 секунд для инициализации
+          periodSeconds: 1 # Для обеспечения большей отказоустойчивости, если контейнер не отвечает 2 секунды, он будет убран из доступа
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:  # Запросы в соответствии с вводным заданием
+            memory: "128Mi"
+            cpu: "100m"  # Я не назначал больше ресурса CPU  соответствии с вводными, так как потребление процесорного время является колеблющейся метрикой и её надо анализировать за большее количество времени, поэтому стартовый рост потребления процессора не критичен
+          limits: # Лимиты можно было бы определить такие же как и запросы для минимального потребления ресурсов, но насколько я знаю best practice, это назначать лимиты в 2 раза больше запросов
+            memory: "256Mi"
+            cpu: "200m"
+      topologySpreadConstraints:  # С целью повышения отказоустойчивости я хочу, чтобы репли в приоритете назначались на node в разных availability zone
+        - maxSkew: 1 # Максимальное отклонение 1 реплика
+          topologyKey: topology.kubernetes.io/zone  # Этот label необходимо прописать на nodes самим или использовать вместо него прописаный указавающий на принадлежность node к availability zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app  : http-server
+              env  : prod
+              owner: NikitaGrigorev
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: autoscaling-website
+  labels:
+    app  : website
+    env  : prod
+    owner: NikitaGrigorev
+  annotations:
+    last_modified_date : 09.01.2023
+    responsible_release: "Nikita Grigorev"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: website
+  minReplicas: 3  # Минимальное количество реплик для максимальной отказоустойчивости, чтобы существовало по 1 реплике в каждой availability zone
+  maxReplicas: 5  # Так как 4 пода справляются с пиковой нагрузкой, для гарантированной отказоустойчивости я поставил на 1 реплику больше
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80  # Насколько я знаю 70-80% максимальной нагрузки на ресурс стандартно ставят на Autoscaler
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80 # Насколько я знаю 70-80% максимальной нагрузки на ресурс стандартно ставят на Autoscaler
