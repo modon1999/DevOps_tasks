@@ -1,0 +1,150 @@
+version: '3.7'
+
+services:
+  minio1:
+    image: minio/minio:latest
+    hostname: minio1
+    networks:
+      - host
+    volumes:
+      - /minio/data:/data
+    environment:
+      MINIO_ROOT_USER_FILE: /run/secrets/root_user
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/root_password
+    secrets:
+      - root_user
+      - root_password
+    deploy:
+      restart_policy:
+        delay: 10s
+        max_attempts: 10
+        window: 60s
+      placement:
+        constraints:
+          - "node.labels.minio1==true"
+    command: server --console-address ":9001" http://minio{1...4}/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 20s
+    extra_hosts:
+      - "minio1:192.168.10.100"
+      - "minio2:192.168.10.2"
+      - "minio3:192.168.10.3"
+      - "minio4:192.168.10.4"
+
+
+  minio2:
+    image: minio/minio:latest
+    hostname: minio2
+    networks:
+      - host
+    volumes:
+      - /minio/data:/data
+    environment:
+      MINIO_ROOT_USER_FILE: /run/secrets/root_user
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/root_password
+    secrets:
+      - root_user
+      - root_password
+    deploy:
+      restart_policy:
+        delay: 10s
+        max_attempts: 10
+        window: 60s
+      placement:
+        constraints:
+          - "node.labels.minio2==true"
+    command: server --console-address ":9001" http://minio{1...4}/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 20s
+    extra_hosts:
+      - "minio1:192.168.10.100"
+      - "minio2:192.168.10.2"
+      - "minio3:192.168.10.3"
+      - "minio4:192.168.10.4"
+
+  minio3:
+    image: minio/minio:latest
+    hostname: minio3
+    networks:
+      - host
+    volumes:
+      - /minio/data:/data
+    environment:
+      MINIO_ROOT_USER_FILE: /run/secrets/root_user
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/root_password
+    secrets:
+      - root_user
+      - root_password
+    deploy:
+      restart_policy:
+        delay: 10s
+        max_attempts: 10
+        window: 60s
+      placement:
+        constraints:
+          - "node.labels.minio3==true"
+    command: server --console-address ":9001" http://minio{1...4}/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 20s
+    extra_hosts:
+      - "minio1:192.168.10.100"
+      - "minio2:192.168.10.2"
+      - "minio3:192.168.10.3"
+      - "minio4:192.168.10.4"
+
+  minio4:
+    image: minio/minio:latest
+    hostname: minio4
+    networks:
+      - host
+    volumes:
+      - /minio/data:/data
+    environment:
+      MINIO_ROOT_USER_FILE: /run/secrets/root_user
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/root_password
+    secrets:
+      - root_user
+      - root_password
+    deploy:
+      restart_policy:
+        delay: 10s
+        max_attempts: 10
+        window: 60s
+      placement:
+        constraints:
+          - "node.labels.minio4==true"
+    command: server --console-address ":9001" http://minio{1...4}/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 20s
+    extra_hosts:
+      - "minio1:192.168.10.100"
+      - "minio2:192.168.10.2"
+      - "minio3:192.168.10.3"
+      - "minio4:192.168.10.4"
+
+secrets:
+   root_user:
+     file: root_user
+   root_password:
+     file: root_password
+
+networks:
+  host:
+    name: host
+    external: true
