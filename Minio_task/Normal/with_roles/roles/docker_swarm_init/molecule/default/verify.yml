@@ -1,0 +1,10 @@
+---
+# This is an example playbook to execute Ansible tests.
+
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+  - name: Include tests_docker_swarm
+    include_role: 
+      name: "tests_docker_swarm"

@@ -1,0 +1,39 @@
+---
+- name: Create Docker Swarm Cluster
+  hosts: all
+  become: yes
+
+  tasks:
+
+  - name: Check if Swarm is Already Initialized
+    shell: docker node ls
+    register: swarm_status
+    ignore_errors: true
+
+  - block:
+    - name: Initialize Docker Swarm
+      docker_swarm:
+        state: present
+        advertise_addr: "{{ ansible_host }}"
+
+    - name: Get the Manager join-token
+      shell: docker swarm join-token --quiet manager
+      register: manager_token
+
+    - name: Get the worker join-token
+      shell: docker swarm join-token --quiet worker
+      register: worker_token
+
+    - name: Registrer IP namager Docker Swarm
+      set_fact: ip_manager_swarm="{{ ansible_host }}"
+
+    run_once: true
+    when: swarm_status.rc != 0 and inventory_hostname in groups['swarm_managers']
+
+  - name: Add Workers to the Swarm
+    docker_swarm:
+      state: join
+      advertise_addr: "{{ ansible_host }}"
+      join_token: "{{ worker_token.stdout }}"
+      remote_addrs: [ "{{ ip_manager_swarm }}:2377" ]
+    when: inventory_hostname in groups['swarm_workers']

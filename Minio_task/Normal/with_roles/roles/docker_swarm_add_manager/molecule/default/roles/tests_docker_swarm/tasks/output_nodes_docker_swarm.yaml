@@ -1,0 +1,8 @@
+---
+- name: Get info on Docker Swarm and list of registered nodes
+  docker_swarm_info:
+    nodes: yes      
+  register: swarm_info
+- name: Output Nodes in Docker Swarm
+  debug:
+    var: swarm_info.nodes

@@ -1,0 +1,15 @@
+---
+# tasks file for docker_swarm_add_manager
+- name: Check if Swarm is Already Initialized
+  shell: docker node ls
+  register: swarm_status
+  ignore_errors: true
+
+- name: Add Managers to the Swarm
+  docker_swarm:
+    state: join
+    advertise_addr: "{{ ansible_host }}"
+    join_token: "{{ manager_token.stdout }}"
+    remote_addrs: "{{ ip_manager_swarm }}:2377"
+  when: swarm_status.rc != 0
+

@@ -1,0 +1,34 @@
+---
+dependency:
+  name: galaxy
+  enable: false
+lint:
+  yamllint .
+driver:
+  name: docker
+platforms:
+  - name: manager
+    hostname: manager
+    image: docker.io/pycontribs/ubuntu:latest
+    volumes:
+      - /minio/data1:/minio/data
+    networks:
+      - name: "minio"
+    privileged: yes
+    pre_build_image: true
+  - name: worker
+    hostname: worker
+    image: docker.io/pycontribs/ubuntu:latest
+    volumes:
+      - /minio/data2:/minio/data
+    networks:
+      - name: "minio"
+    privileged: yes
+    pre_build_image: true
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      vault_password_file: "/home/vagrant/ansible/password.txt"
+verifier:
+  name: ansible

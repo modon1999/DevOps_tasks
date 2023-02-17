@@ -1,0 +1,17 @@
+---
+- name: Converge
+  hosts: all
+  become: yes
+  tasks:
+    - name: "install_docker"
+      include_role:
+        name: "install_docker"
+    - name: Instal iproute2
+      apt: name=iproute2 state=latest update_cache=true
+    - setup:
+    - name: Ip
+      debug:
+        var: ansible_facts
+    - name: "Include docker_swarm_init"
+      include_role:
+        name: "docker_swarm_init"

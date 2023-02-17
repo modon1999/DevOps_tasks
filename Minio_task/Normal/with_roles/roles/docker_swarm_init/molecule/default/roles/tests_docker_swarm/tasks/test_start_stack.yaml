@@ -1,0 +1,23 @@
+---
+- name: Install docker_stack ansible module requirements
+  pip: name={{ item }}
+  loop:
+    - jsondiff
+    - pyyaml
+- name: Deploy test Stack
+  docker_stack:
+    state: present
+    name: test_stack
+    compose:
+      - version: '3'
+        services:
+          hello:
+            image: hello-world
+  register: results
+- name: Print output hello-world container
+  debug:
+    var: results.rc
+- name: Remove test Stack
+  docker_stack:
+    name: test_stack
+    state: absent

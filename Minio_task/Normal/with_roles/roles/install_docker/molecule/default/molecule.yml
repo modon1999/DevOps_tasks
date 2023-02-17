@@ -1,0 +1,17 @@
+---
+dependency:
+  name: galaxy
+  enable: false
+lint:
+  yamllint .
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: docker.io/pycontribs/ubuntu:latest
+    privileged: yes
+    pre_build_image: true
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

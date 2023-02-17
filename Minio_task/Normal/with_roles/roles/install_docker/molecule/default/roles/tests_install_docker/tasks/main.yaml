@@ -1,0 +1,6 @@
+---
+- name: "Include tasks for testing Docker"
+  include_tasks: "{{ item }}"
+  loop:
+    - "check_installed_docker.yaml"
+    - "test_start_container.yaml"

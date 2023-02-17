@@ -1,0 +1,9 @@
+---
+- name: Check health Minio
+  uri:
+    url: http://localhost:9000/minio/health/live
+    return_content: yes
+  register: status_minio
+- name: Return status Minio
+  debug:
+    var: status_minio

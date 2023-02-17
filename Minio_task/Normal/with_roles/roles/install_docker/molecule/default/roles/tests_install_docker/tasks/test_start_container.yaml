@@ -1,0 +1,9 @@
+---
+- name: Create a test container
+  docker_container:
+    name: test
+    image: hello-world
+  register: results
+- name: Print output hello-world container
+  debug:
+    var: results.container.Created

@@ -1,0 +1,56 @@
+---
+# tasks file for deploy_docker_stack_minio
+- name: Install Pip
+  apt: name=python3-pip state=latest update_cache=true
+
+- name: Install docker_stack ansible module requirements
+  pip: name={{ item }}
+  loop:
+    - jsondiff
+    - pyyaml
+
+- name: Create directory for Data Minio
+  file:
+    path: /minio/data
+    state: directory
+
+- block:
+
+  - name: Create secret Root User
+    docker_secret:
+      name: root_user
+      data: '{{ root_user }}'
+      state: present
+
+  - name: Create secret Root Password
+    docker_secret:
+      name: root_password
+      data: '{{ root_password }}'
+      state: present
+
+  - name: Get info on Docker Swarm and list of registered nodes
+    docker_swarm_info:
+      nodes: yes
+    register: swarm_info
+
+  - name: Add Labels for Minio
+    docker_node:
+      hostname: "{{ item.ID }}"
+      labels: minio{{ ansible_loop.index }}=true
+      labels_state: replace
+    loop: "{{ swarm_info.nodes }}"
+    loop_control:
+      extended: yes
+
+  - name: Generate Config Docker Minio
+    template: src=minio.j2 dest=/opt/minio.yaml mode=0644
+
+  - name: Deploy stack from a compose file
+    docker_stack:
+      state: present
+      name: minio
+      compose:
+        - /opt/minio.yaml
+
+  when: inventory_hostname in groups['{{ swarm_managers }}']
+  run_once: true

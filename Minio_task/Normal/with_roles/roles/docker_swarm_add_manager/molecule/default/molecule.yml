@@ -1,0 +1,27 @@
+---
+dependency:
+  name: galaxy
+  enable: false
+lint:
+  yamllint .
+driver:
+  name: docker
+platforms:
+  - name: manager_1
+    hostname: manager_1
+    image: docker.io/pycontribs/ubuntu:latest
+    networks:
+      - name: "minio"
+    privileged: yes
+    pre_build_image: true
+  - name: manager_2
+    hostname: manager_2
+    image: docker.io/pycontribs/ubuntu:latest
+    networks:
+      - name: "minio"
+    privileged: yes
+    pre_build_image: true
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

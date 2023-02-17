@@ -1,0 +1,7 @@
+---
+- name: "Include tasks for testing Docker"
+  include_tasks: "{{ item }}"
+  loop:
+    - "output_nodes_docker_swarm.yaml"
+    - "test_start_stack.yaml"
+

@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+
+{% for node in play_hosts %}
+  minio{{ loop.index }}:
+    image: minio/minio:latest
+    hostname: minio{{ loop.index }}
+    networks:
+      - host
+    volumes:
+      - /minio/data:/data
+    environment:
+      MINIO_ROOT_USER_FILE: /run/secrets/root_user
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/root_password
+    secrets:
+      - root_user
+      - root_password
+    deploy:
+      restart_policy:
+        delay: 10s
+        max_attempts: 10
+        window: 60s
+      placement:
+        constraints:
+          - "node.labels.minio{{ loop.index }}==true"
+    command: server --console-address ":9001" http://minio{1...{{ play_hosts|length }}}/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 20s
+    extra_hosts:
+    {% for i in play_hosts %}
+      - "minio{{ loop.index }}: {{ hostvars[i]['ansible_facts']['default_ipv4']['address'] }}"
+    {% endfor %}
+
+{% endfor %}
+
+secrets:
+   root_user:
+     external: true
+   root_password:
+     external: true
+
+networks:
+  host:
+    name: host
+    external: true

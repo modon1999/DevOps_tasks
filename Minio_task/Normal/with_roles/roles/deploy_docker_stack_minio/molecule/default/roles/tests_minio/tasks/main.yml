@@ -1,0 +1,7 @@
+---
+- name: "Include tasks for testing Minio"
+  include_tasks: "{{ item }}"
+  loop:
+    - "output_nodes_docker_swarm.yaml"
+    - "check_minio_status.yaml"
+
