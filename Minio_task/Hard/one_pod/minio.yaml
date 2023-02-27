@@ -1,0 +1,184 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-secret
+  labels:
+    app  : minio
+    env  : prod
+    owner: NikitaGrigorev
+  annotations:
+    last_modified_date : 20.02.2023
+    responsible_release: "Nikita Grigorev"
+type: Opaque
+stringData:
+  user: "modon"
+  password: "roo6peeW"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio
+  labels:
+    app  : minio
+    env  : prod
+    owner: NikitaGrigorev
+  annotations:
+    last_modified_date : 20.02.2023
+    responsible_release: "Nikita Grigorev"
+spec:
+  selector:
+    matchLabels:
+      app    : minio
+      env    : prod
+      enable : 'true'
+  template:
+    metadata:
+      labels:
+        app    : minio
+        env    : prod
+        enable : 'true'
+        owner  : NikitaGrigorev
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args: ["server"]
+          env:
+          - name: MINIO_CONSOLE_ADDRESS
+            value: ":9001"
+          - name: MINIO_VOLUMES
+            value: "/data"
+          - name: MINIO_ROOT_USER
+            valueFrom:
+              secretKeyRef:
+                name: minio-secret
+                key: user
+          - name: MINIO_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: minio-secret
+                key: password
+          ports:
+          - name: minio-console
+            containerPort: 9001
+            protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+              scheme: "HTTP"
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+              scheme: "HTTP"
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 5
+          resources:
+            requests:
+              memory: "1000Mi"
+              cpu: "1000m"
+            limits:
+              memory: "1500Mi"
+              cpu: "1500m"
+          volumeMounts:
+          - name: storage
+            mountPath: /data
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: minio-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-service
+  labels:
+    app  : minio
+    env  : prod
+    owner: NikitaGrigorev
+  annotations:
+    last_modified_date : 20.02.2023
+    responsible_release: "Nikita Grigorev"
+spec:
+  selector:
+    app    : minio
+    env    : prod
+    enable : 'true'
+  ports:
+  - name: minio-console
+    protocol: TCP
+    port: 9001
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-ingress
+  labels:
+    app  : minio
+    env  : prod
+    owner: NikitaGrigorev
+  annotations:
+    last_modified_date : 20.02.2023
+    responsible_release: "Nikita Grigorev"
+    nginx.ingress.kubernetes.io/proxy-body-size: 1024m
+spec:
+  rules:
+   - host: www.modon.com
+     http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: minio-service
+                port:
+                  number: 9001
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minio-pv-volume
+  labels:
+    app  : minio
+    env  : prod
+    owner: NikitaGrigorev
+  annotations:
+    last_modified_date : 20.02.2023
+    responsible_release: "Nikita Grigorev"
+spec:
+  storageClassName: standart
+  capacity:
+    storage: 15Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/minio"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pv-claim
+  labels:
+    app  : minio
+    env  : prod
+    owner: NikitaGrigorev
+  annotations:
+    last_modified_date : 20.02.2023
+    responsible_release: "Nikita Grigorev"
+spec:
+  storageClassName: standart
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
