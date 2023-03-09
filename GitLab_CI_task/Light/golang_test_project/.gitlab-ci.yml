@@ -1,0 +1,20 @@
+stages:
+  - build
+  - deploy
+
+include:
+  - project: devops3063409/gitlab-ci-includes/docker-build
+    file: docker_build.yml
+    ref: main
+  - project: devops3063409/gitlab-ci-includes/docker-build
+    file: docker_deploy.yml
+    ref: main
+
+### DOCKER BUILD AND RELEASE IN GITLAB REGISTRY
+Build Golang Project:
+  extends: .docker_build
+
+Deploy project to Runner:
+  extends: .docker_deploy
+  variables:
+      runner_tag: golang_docker
