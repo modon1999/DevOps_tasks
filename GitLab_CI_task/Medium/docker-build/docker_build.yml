@@ -1,0 +1,22 @@
+# Build test golang project in Docker
+variables:
+  docker_image_name: "${CI_COMMIT_BRANCH}"
+  docker_image_tag: "${CI_COMMIT_SHORT_SHA}"
+  docker_registry: "${CI_REGISTRY}"
+  docker_registry_user: "${CI_REGISTRY_USER}"
+  docker_registry_password: "${CI_REGISTRY_PASSWORD}"
+
+.docker_build:
+  image: docker:stable
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "${docker_registry_user}" -p "${docker_registry_password}" ${docker_registry}
+  script:
+    - docker build --pull -t "${CI_REGISTRY_IMAGE}/${docker_image_name}:${docker_image_tag}" .
+    - docker push "${CI_REGISTRY_IMAGE}/${docker_image_name}:${docker_image_tag}"
+  rules:
+    - if: $CI_COMMIT_BRANCH
+      exists:
+        - Dockerfile
