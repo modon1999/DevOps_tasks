@@ -1,0 +1,9 @@
+variables:
+  runner_tag: "golang_docker"
+  docker_image_name: "golang_docker"
+  docker_image_tag: "v0.1.0"
+
+include:
+  - project: devops3063409/gitlab-ci-flows/CI_CD
+    file: .gitlab-ci.yml
+    ref: main
