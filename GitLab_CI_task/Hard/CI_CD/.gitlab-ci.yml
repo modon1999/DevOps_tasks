@@ -1,0 +1,35 @@
+stages:
+  - test_code
+  - build
+  - deploy_stage
+  - deploy_prod
+
+include:
+  - project: devops3063409/gitlab-ci-includes/docker-build
+    file: check_linter_golang.yml
+    ref: main
+  - project: devops3063409/gitlab-ci-includes/docker-build
+    file: docker_build.yml
+    ref: main
+  - project: devops3063409/gitlab-ci-includes/docker-build
+    file: docker_deploy.yml
+    ref: main
+  - project: devops3063409/gitlab-ci-includes/docker-build
+    file: deploy_helm.yml
+    ref: main
+
+### DOCKER BUILD AND RELEASE IN GITLAB REGISTRY
+Check Linter Golang Project:
+  extends: .check_linter_golang
+
+### DOCKER BUILD AND RELEASE IN GITLAB REGISTRY
+Build Golang Project:
+  extends: .docker_build
+
+### DEPLOY DOCKER CONTAINER ON RUNNER STAGING
+Deploy Golang Project to Runner:
+  extends: .docker_deploy
+
+### DEPLOY HELM CHART ON RUNNER PRODUCTION
+Deploy Helm Chart:
+  extends: .helm_deploy
