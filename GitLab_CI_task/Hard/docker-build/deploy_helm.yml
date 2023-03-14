@@ -1,0 +1,38 @@
+variables:
+  kubeconfig: /home/vagrant/.kube/config
+  name_helm_deploy: app
+  application: gitlab
+  environment: stage
+  owner: NikitaGrigorev
+  last_modified_date: "09.03.2023"
+  responsible_release: "Nikita_Grigorev"
+  namespace: default
+  imageCredentials_registry: ${docker_registry}
+  imageCredentials_username: ${docker_registry_user}
+  imageCredentials_password: ${docker_registry_password}
+  image_pullPolicy: "IfNotPresent"
+  service_type: ClusterIP
+  service_port: "8080"
+  service_protocol: TCP
+  ingress_host: www.modon.com
+  resources_requests_memory: "256Mi"
+  resources_requests_cpu: "200m"
+  resources_limits_memory: "512Mi"
+  resources_limits_cpu: "400m"
+  autoscaling_enabled: "false"
+  autoscaling_minReplicas: "2"
+  autoscaling_maxReplicas: "5"
+  autoscaling_averageUtilization: "80"
+  runner_tag_prod: "kube"
+
+.helm_deploy:
+  environment: production
+  tags:
+    - ${runner_tag_prod}
+  stage: deploy_prod
+  before_script:
+    - git clone https://oauth2:${CLONE_LINT_CONF}@gitlab.com/devops3063409/gitlab-ci-includes/docker-build.git
+  script:
+    - helm install ${name_helm_deploy} ./docker-build/helm_chart_for_deploy --kubeconfig ${kubeconfig} --set metadata.name="${name_helm_deploy}-helm" --set metadata.app=${application} --set metadata.env=${environment} --set metadata.owner=${owner} --set metadata.annotations.last_modified_date=${last_modified_date} --set metadata.annotations.responsible_release=${responsible_release} --set namespace=${namespace} --set imageCredentials.registry=${imageCredentials_registry} --set imageCredentials.username=${imageCredentials_username} --set imageCredentials.password=${imageCredentials_password} --set image.repository="${CI_REGISTRY_IMAGE}/${docker_image_name}" --set image.tag=${docker_image_tag} --set image.pullPolicy=${image_pullPolicy} --set service.type=${service_type} --set service.port=${service_port} --set service.protocol=${service_protocol} --set ingress.host=${ingress_host} --set resources.requests.memory=${resources_requests_memory} --set resources.requests.cpu=${resources_requests_cpu} --set resources.limits.memory=${resources_limits_memory} --set resources.limits.cpu=${resources_limits_cpu} --set autoscaling.enabled=${autoscaling_enabled} --set autoscaling.minReplicas=${autoscaling_minReplicas} --set autoscaling.maxReplicas=${autoscaling_maxReplicas} --set autoscaling.averageUtilization=${autoscaling_averageUtilization}
+  only:
+  - main

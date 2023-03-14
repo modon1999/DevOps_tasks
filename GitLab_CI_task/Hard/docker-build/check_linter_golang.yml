@@ -1,0 +1,7 @@
+.check_linter_golang:
+  image: golangci/golangci-lint:v1.51.2
+  stage: test_code
+  before_script:
+    - git clone https://oauth2:${CLONE_LINT_CONF}@gitlab.com/devops3063409/gitlab-ci-includes/docker-build.git
+  script:
+    - golangci-lint run --config=./docker-build/.golangci.yml

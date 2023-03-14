@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.metadata.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app  : {{ .Values.metadata.app }}
+    env  : {{ .Values.metadata.env }}
+    owner: {{ .Values.metadata.owner }}
+  annotations:
+    last_modified_date : {{ .Values.metadata.annotations.last_modified_date }}
+    responsible_release: {{ .Values.metadata.annotations.responsible_release }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app  : {{ .Values.metadata.app }}
+      env  : {{ .Values.metadata.env }}
+      enable : 'true'
+  template:
+    metadata:
+      annotations:
+        last_modified_date : {{ .Values.metadata.annotations.last_modified_date }}
+        responsible_release: {{ .Values.metadata.annotations.responsible_release }}
+      labels:
+        app    : {{ .Values.metadata.app }}
+        env    : {{ .Values.metadata.env }}
+        enable : 'true'
+        owner  : {{ .Values.metadata.owner }}
+    spec:
+      {{- define "imagePullSecret" }}
+      {{- printf "{\"auths\": {\"%s\": {\"auth\": \"%s\"}}}" .Values.imageCredentials.registry (printf "%s:%s" .Values.imageCredentials.username .Values.imageCredentials.password | b64enc) | b64enc }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.metadata.app }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: {{ .Values.metadata.app }}-port
+              containerPort: {{ .Values.service.port }}
+              protocol: {{ .Values.service.protocol }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.metadata.app }}-port
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.metadata.app }}-port
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+              cpu: {{ .Values.resources.limits.cpu }}

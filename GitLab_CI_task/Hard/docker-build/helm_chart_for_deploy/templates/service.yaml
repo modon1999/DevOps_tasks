@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-{{ .Values.metadata.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app  : {{ .Values.metadata.app }}
+    env  : {{ .Values.metadata.env }}
+    owner: {{ .Values.metadata.owner }}
+  annotations:
+    last_modified_date : {{ .Values.metadata.annotations.last_modified_date }}
+    responsible_release: {{ .Values.metadata.annotations.responsible_release }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.metadata.app }}-port
+      protocol: {{ .Values.service.protocol }}
+      name: {{ .Values.metadata.app }}-port
+  selector:
+    app  : {{ .Values.metadata.app }}
+    env  : {{ .Values.metadata.env }}
+    enable : 'true'

@@ -1,0 +1,43 @@
+metadata:
+  name   : test-golang-project
+  app    : gitlab
+  env    : prod
+  owner  : NikitaGrigorev
+  annotations:
+    last_modified_date : 09.03.2023
+    responsible_release: "Nikita Grigorev"
+
+namespace: default
+
+imageCredentials:
+  registry: quay.io
+  username: someone
+  password: sillyness
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 80
+  protocol: TCP
+
+ingress:
+  host: www.modon.com
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "200m"
+  limits:
+    memory: "512Mi"
+    cpu: "400m"
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  averageUtilization: 80
+

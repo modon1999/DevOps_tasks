@@ -1,0 +1,19 @@
+variables:
+  docker_image_name: ${CI_COMMIT_BRANCH}
+  docker_image_tag: ${CI_COMMIT_SHORT_SHA}
+  docker_registry: ${CI_REGISTRY}
+  docker_registry_user: ${CI_REGISTRY_USER}
+  docker_registry_password: ${CI_REGISTRY_PASSWORD}
+  runner_tag_stage: "godocker"
+
+.docker_deploy:
+  environment: staging
+  tags:
+    - ${runner_tag_stage}
+  stage: deploy_stage
+  before_script:
+    - docker login -u "${docker_registry_user}" -p "${docker_registry_password}" ${docker_registry}
+  script:
+    - docker run -d -p 8080:8080 "${CI_REGISTRY_IMAGE}/${docker_image_name}:${docker_image_tag}"
+  except:
+  - main
