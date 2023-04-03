@@ -1,0 +1,35 @@
+# The database vendor.
+db=postgres
+
+# The username of the database user.
+db-username={{ db_user }}
+
+# The password of the database user.
+db-password={{ db_user_passwd }}
+
+# The full database JDBC URL. If not provided, a default URL is set based on the selected database vendor.
+db-url=jdbc:postgresql://localhost/{{ db_name }}
+
+# Observability
+
+# If the server should expose metrics and healthcheck endpoints.
+metrics-enabled=true
+
+# HTTP
+
+# The file path to a server certificate or certificate chain in PEM format.
+https-certificate-file=/etc/letsencrypt/live/{{ domain }}/cert.pem
+
+# The file path to a private key in PEM format.
+https-certificate-key-file=/etc/letsencrypt/live/{{ domain }}/privkey.pem
+
+# Hostname for the Keycloak server.
+hostname={{ domain }}
+https-port={{ https_port }}
+
+# http-enabled=true
+
+# Если надо, включаем логирование в файл
+# log-console-output=default
+# log=console,file
+# log-file=/tmp/keycloak.log

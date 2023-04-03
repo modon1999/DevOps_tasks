@@ -1,0 +1,7 @@
+---
+# defaults file for install_keycloak
+db_user       : keycloak
+db_user_passwd: roo6peeW
+db_name       : keycloak
+domain        : example.ru
+https_port    : 443

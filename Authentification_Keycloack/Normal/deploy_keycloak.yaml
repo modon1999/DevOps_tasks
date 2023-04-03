@@ -1,0 +1,24 @@
+---
+- name: Install Postgresql-14
+  hosts: keycloak
+  become: yes
+  roles:
+    - install_postgresql_14
+
+- name: Prepar Postgre DB for Keyclok
+  hosts: keycloak
+  become: yes
+  roles:
+    - prepar_postgre_for_keyclok
+
+- name: Create Cert Lets Encrypt
+  hosts: keycloak
+  become: yes
+  roles:
+    - create_cert_lets_encrypt
+
+- name: Install Keycloak
+  hosts: keycloak
+  become: yes
+  roles:
+    - install_keycloak

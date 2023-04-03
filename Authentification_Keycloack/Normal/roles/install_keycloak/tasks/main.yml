@@ -1,0 +1,51 @@
+---
+- name: Create group Keycloak
+  group:
+    name: keycloak
+    state: present
+
+- name: Add the user Keycloak
+  user:
+    name: keycloak
+    group: keycloak
+    home: /var/lib/keycloak
+    shell: /sbin/nologin
+
+- name: Create a directory for Keycloak
+  ansible.builtin.file:
+    path: /opt/keycloak
+    state: directory
+    mode: '0700'
+
+- name: Download Keycloak
+  get_url:
+    url: https://github.com/keycloak/keycloak/releases/download/21.0.1/keycloak-21.0.1.zip
+    dest: /opt/keycloak/keycloak-21.0.1.zip
+
+- name: Install Unzip
+  apt: name=unzip state=latest update_cache=true
+
+- name: Unzip Keycloak
+  unarchive:
+    remote_src: true
+    src: /opt/keycloak/keycloak-21.0.1.zip
+    dest: /opt/keycloak/
+
+- name: Install Java for Keycloak
+  apt: name=openjdk-11-jdk state=latest update_cache=true
+
+- name: Generate Config Keycloak
+  template: src=keycloak_conf.j2 dest=/opt/keycloak/keycloak-21.0.1/conf/keycloak.conf mode=0644
+
+- name: Build Config Keycloak
+  shell: '/opt/keycloak/keycloak-21.0.1/bin/kc.sh build'
+
+- name: Generate Config Systemd for Keycloak service
+  template: src=systemd_keycloak.j2 dest=/etc/systemd/system/keycloak.service mode=0644
+
+- name: Config Systemd for Keycloak service
+  systemd:
+    name: keycloak
+    state: restarted
+    daemon_reload: true
+    enabled: true

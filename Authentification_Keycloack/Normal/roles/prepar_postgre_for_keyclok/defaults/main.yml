@@ -1,0 +1,5 @@
+---
+# defaults file for prepar_postgre_for_keyclok
+db_user: keycloak
+db_user_passwd: roo6peeW
+db_name: keycloak

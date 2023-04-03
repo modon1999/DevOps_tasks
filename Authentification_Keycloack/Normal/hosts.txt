@@ -1,0 +1,2 @@
+[keycloak_worker_server]
+keycloak ansible_host=X.X.X.X ansible_user=user

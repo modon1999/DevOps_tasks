@@ -1,0 +1,50 @@
+---
+- name: Install package acl for management PostgreSQL-14
+  apt: name=acl state=latest update_cache=true
+
+- name: Install Pip for install psycopg2 module
+  apt: name=pip state=latest update_cache=true
+
+- name: Install psycopg2 module for management PostgreSQL-14
+  pip: name=psycopg2-binary
+
+- name: Create Postgres user for Keycloak
+  become_user: postgres
+  postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_user_passwd }}"
+    no_password_changes: true
+
+- name: Create a new database for Keycloak
+  become_user: postgres
+  postgresql_db:
+    name: "{{ db_name }}"
+    owner: "{{ db_user }}"
+
+- name: Add privileges to a user for Keycloak
+  become_user: postgres
+  postgresql_privs:
+    db: "{{ db_name }}"
+    role: "{{ db_user }}"
+    objs: ALL_IN_SCHEMA
+    privs: ALL
+
+- name: Copy Restore db file
+  ansible.builtin.copy:
+    src: keycloak_back.sql
+    dest: /tmp/keycloak_back.sql
+    owner: postgres
+    group: postgres
+    mode: '0644'
+
+- name: Restore db
+  become_user: postgres
+  postgresql_db:
+    state: restore
+    name: "{{ db_name }}"
+    target: /tmp/keycloak_back.sql
+
+- name: Remove Restore DB file
+  file:
+    path: /tmp/keycloak_back.sql
+    state: absent

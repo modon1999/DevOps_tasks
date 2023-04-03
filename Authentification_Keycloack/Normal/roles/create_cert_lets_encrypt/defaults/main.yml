@@ -1,0 +1,4 @@
+---
+# defaults file for create_cert_lets_encrypt
+email: example@yandex.ru
+domain: example.ru

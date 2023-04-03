@@ -1,0 +1,6 @@
+---
+- name: Install Certbot
+  apt: name=certbot state=latest update_cache=true
+
+- name: Create cert for domain
+  shell: 'certbot certonly -m {{ email }} --agree-tos --reinstall --no-eff-email --standalone --preferred-challenges http -d {{ domain }}'
